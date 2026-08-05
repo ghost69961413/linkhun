@@ -13,18 +13,18 @@ public class ProfileController {
 
     private final ProfileService profileService;
 
-    @GetMapping("/{username}")
-    public ProfileResponse getProfile(
-            @PathVariable String username) {
+    @GetMapping("/me")
+    public ProfileResponse getMyProfile() {
+        return profileService.getMyProfile();
+    }
 
+    @GetMapping("/{username}")
+    public ProfileResponse getProfile(@PathVariable String username) {
         return profileService.getProfileByUsername(username);
     }
 
-    @PutMapping("/{userId}")
-    public ProfileResponse updateProfile(
-            @PathVariable Long userId,
-            @RequestBody ProfileRequest request) {
-
-        return profileService.updateProfile(userId, request);
+    @PutMapping
+    public ProfileResponse updateProfile(@RequestBody ProfileRequest request) {
+        return profileService.updateProfile(request);
     }
 }

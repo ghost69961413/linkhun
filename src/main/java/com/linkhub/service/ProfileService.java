@@ -5,11 +5,10 @@ import com.linkhub.dto.profile.ProfileResponse;
 
 public interface ProfileService {
 
+    ProfileResponse getMyProfile();
+
     ProfileResponse getProfileByUsername(String username);
 
-    ProfileResponse updateProfile(
-            Long userId,
-            ProfileRequest request
-    );
+    ProfileResponse updateProfile(ProfileRequest request);
 
 }
