@@ -1,4 +1,4 @@
-package com.linkhub.dto.education;
+package com.linkhub.dto.experience;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -8,23 +8,26 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EducationRequest {
+public class ExperienceRequest {
 
     @NotBlank
-    private String collegeName;
+    private String companyName;
 
     @NotBlank
-    private String degree;
+    private String designation;
 
     @NotBlank
-    private String fieldOfStudy;
+    private String employmentType;
+
+    @NotBlank
+    private String location;
 
     @NotNull
     private Integer startYear;
 
     private Integer endYear;
 
-    private Double grade;
+    private Boolean currentlyWorking;
 
     private String description;
 }
