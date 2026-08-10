@@ -9,6 +9,7 @@ import com.linkhub.mapper.FollowMapper;
 import com.linkhub.repository.FollowRepository;
 import com.linkhub.repository.UserRepository;
 import com.linkhub.service.FollowService;
+import com.linkhub.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +24,7 @@ public class FollowServiceImpl implements FollowService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
     private final FollowMapper followMapper;
+    private final NotificationService notificationService;
 
     private User getCurrentUser() {
 
@@ -59,6 +61,14 @@ public class FollowServiceImpl implements FollowService {
                 .build();
 
         followRepository.save(follow);
+
+        notificationService.createNotification(
+                targetUser.getId(),
+                currentUser.getId(),
+                "FOLLOW",
+                currentUser.getFirstName() + " started following you",
+                currentUser.getId()
+        );
     }
 
     @Override

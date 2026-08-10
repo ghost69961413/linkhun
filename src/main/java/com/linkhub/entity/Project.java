@@ -16,6 +16,7 @@ import java.util.Set;
 @Builder
 public class Project extends BaseEntity {
 
+
     @Column(nullable = false)
     private String title;
 
@@ -51,5 +52,6 @@ public class Project extends BaseEntity {
     )
     @Builder.Default
     private Set<Technology> technologies = new HashSet<>();
+
 
 }

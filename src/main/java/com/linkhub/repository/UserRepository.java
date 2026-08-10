@@ -1,17 +1,25 @@
 package com.linkhub.repository;
 
 import com.linkhub.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<User> findByEmail(String email);
-
-    Optional<User> findByUsername(String username);
+    // Tumhara existing method
 
     boolean existsByEmail(String email);
 
     boolean existsByUsername(String username);
+
+    java.util.Optional<User> findByEmail(String email);
+
+    // Search users
+    Page<User> findByUsernameContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
+            String username,
+            String firstName,
+            String lastName,
+            Pageable pageable
+    );
 }
