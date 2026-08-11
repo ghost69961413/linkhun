@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -20,12 +21,22 @@ public class PostController {
 
     private final PostService postService;
 
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<PostResponse>> createPost(
-            @Valid @RequestBody PostRequest request) {
+            @Valid @ModelAttribute PostRequest request,
+
+            @RequestParam(value = "image", required = false)
+            MultipartFile image,
+
+            @RequestParam(value = "video", required = false)
+            MultipartFile video) {
 
         PostResponse response =
-                postService.createPost(request);
+                postService.createPost(
+                        request,
+                        image,
+                        video
+                );
 
         return ResponseEntity.ok(
                 ApiResponse.<PostResponse>builder()
@@ -35,6 +46,7 @@ public class PostController {
                         .build()
         );
     }
+
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<Page<PostResponse>>> getMyPosts(

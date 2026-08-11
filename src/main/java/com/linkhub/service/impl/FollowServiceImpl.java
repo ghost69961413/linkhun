@@ -80,7 +80,25 @@ public class FollowServiceImpl implements FollowService {
                 .orElseThrow(() ->
                         new UserNotFoundException("User not found"));
 
-        followRepository.deleteByFollowerAndFollowing(currentUser, targetUser);
+        if (currentUser.getId().equals(targetUser.getId())) {
+            throw new BadRequestException(
+                    "You cannot unfollow yourself"
+            );
+        }
+
+        if (!followRepository.existsByFollowerAndFollowing(
+                currentUser,
+                targetUser)) {
+
+            throw new BadRequestException(
+                    "You are not following this user"
+            );
+        }
+
+        followRepository.deleteByFollowerAndFollowing(
+                currentUser,
+                targetUser
+        );
     }
 
     @Override

@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -18,12 +19,14 @@ public class ProjectController {
 
     private final ProjectService projectService;
 
-    @PostMapping
+    @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<ProjectResponse>> createProject(
-            @Valid @RequestBody ProjectRequest request) {
+            @Valid @ModelAttribute ProjectRequest request,
+            @RequestParam(value = "thumbnail", required = false)
+            MultipartFile thumbnail) {
 
         ProjectResponse response =
-                projectService.createProject(request);
+                projectService.createProject(request, thumbnail);
 
         return ResponseEntity.ok(
                 ApiResponse.<ProjectResponse>builder()

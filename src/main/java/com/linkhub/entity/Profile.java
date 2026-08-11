@@ -26,6 +26,9 @@ public class Profile extends BaseEntity {
     @Builder.Default
     private Set<Skill> skills = new HashSet<>();
 
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
+
 
     @Column(length = 255)
     private String headline;

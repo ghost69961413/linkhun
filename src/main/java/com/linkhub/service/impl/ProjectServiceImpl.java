@@ -5,7 +5,9 @@ import com.linkhub.dto.ProjectDto.ProjectResponse;
 import com.linkhub.entity.Profile;
 import com.linkhub.entity.Project;
 import com.linkhub.entity.Technology;
+import com.linkhub.exception.BadRequestException;
 import com.linkhub.exception.ProfileNotFoundException;
+import com.linkhub.exception.ProjectNotFoundException;
 import com.linkhub.mapper.ProjectMapper;
 import com.linkhub.repository.ProfileRepository;
 import com.linkhub.repository.ProjectRepository;
@@ -15,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import com.linkhub.service.MediaService;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +32,8 @@ public class ProjectServiceImpl implements ProjectService {
     private final TechnologyRepository technologyRepository;
     private final ProfileRepository profileRepository;
     private final ProjectMapper projectMapper;
+    private final MediaService mediaService;
+
 
     private Profile getCurrentProfile() {
 
@@ -42,7 +48,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponse createProject(ProjectRequest request) {
+    public ProjectResponse createProject(
+            ProjectRequest request,
+            MultipartFile thumbnail) {
 
         Profile profile = getCurrentProfile();
 
@@ -65,11 +73,23 @@ public class ProjectServiceImpl implements ProjectService {
             }
         }
 
+        // Upload thumbnail to Cloudinary
+        String thumbnailUrl = null;
+
+        if (thumbnail != null && !thumbnail.isEmpty()) {
+
+            thumbnailUrl = mediaService.uploadImage(
+                    thumbnail,
+                    "linkhub/projects"
+            );
+        }
+
         Project project = Project.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .githubUrl(request.getGithubUrl())
                 .liveDemoUrl(request.getLiveDemoUrl())
+                .thumbnailUrl(thumbnailUrl)
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .status(request.getStatus())
@@ -79,9 +99,10 @@ public class ProjectServiceImpl implements ProjectService {
                 .technologies(technologies)
                 .build();
 
-        return projectMapper.toResponse(projectRepository.save(project));
+        return projectMapper.toResponse(
+                projectRepository.save(project)
+        );
     }
-
     @Override
     public List<ProjectResponse> getMyProjects() {
 
@@ -98,18 +119,30 @@ public class ProjectServiceImpl implements ProjectService {
 
         Project project = projectRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Project not found"));
+         new ProjectNotFoundException("Project not found"));
 
         return projectMapper.toResponse(project);
     }
 
     @Override
-    public ProjectResponse updateProject(Long id,
-                                         ProjectRequest request) {
+    public ProjectResponse updateProject(
+            Long id,
+            ProjectRequest request) {
+
+        Profile currentProfile = getCurrentProfile();
 
         Project project = projectRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Project not found"));
+         new ProjectNotFoundException("Project not found"));
+
+        if (!project.getProfile()
+                .getId()
+                .equals(currentProfile.getId())) {
+
+            throw new BadRequestException(
+                    "You can only update your own project"
+            );
+        }
 
         project.setTitle(request.getTitle());
         project.setDescription(request.getDescription());
@@ -125,11 +158,24 @@ public class ProjectServiceImpl implements ProjectService {
                 projectRepository.save(project)
         );
     }
-
     @Override
     public void deleteProject(Long id) {
 
-        projectRepository.deleteById(id);
+        Profile currentProfile = getCurrentProfile();
 
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() ->
+         new ProjectNotFoundException("Project not found"));
+
+        if (!project.getProfile()
+                .getId()
+                .equals(currentProfile.getId())) {
+
+            throw new BadRequestException(
+                    "You can only delete your own project"
+            );
+        }
+
+        projectRepository.delete(project);
     }
 }
