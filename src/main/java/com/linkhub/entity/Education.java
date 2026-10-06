@@ -21,7 +21,6 @@ public class Education extends BaseEntity {
     @Column(nullable = false)
     private String fieldOfStudy;
 
-    @Column(nullable = false)
     private Integer startYear;
 
     private Integer endYear;

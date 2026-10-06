@@ -1,0 +1,3 @@
+export function Skeleton({ className = '' }: { className?: string }) { return <div aria-hidden="true" className={`skeleton ${className}`} />; }
+export function ProfileSkeleton() { return <div className="skeleton-card"><Skeleton className="skeleton-avatar"/><div className="skeleton-lines"><Skeleton/><Skeleton className="short"/><Skeleton className="medium"/></div></div>; }
+export function PageLoadingSkeleton() { return <div className="page-skeleton"><Skeleton className="title"/><Skeleton className="subtitle"/><div className="skeleton-grid">{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="tile"/>)}</div><Skeleton className="large-block"/></div>; }

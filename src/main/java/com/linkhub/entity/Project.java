@@ -6,6 +6,8 @@ import lombok.*;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "projects")
@@ -24,6 +26,10 @@ public class Project extends BaseEntity {
     private String description;
 
     private String githubUrl;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "linkhub_repository_id")
+    private Repository linkedRepository;
 
     private String liveDemoUrl;
 
@@ -52,6 +58,24 @@ public class Project extends BaseEntity {
     )
     @Builder.Default
     private Set<Technology> technologies = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(name = "project_features", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "feature", length = 500)
+    @Builder.Default
+    private Set<String> features = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(name = "project_team_members", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "member", length = 255)
+    @Builder.Default
+    private Set<String> teamMembers = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(name = "project_screenshots", joinColumns = @JoinColumn(name = "project_id"))
+    @Column(name = "image_url", length = 2000)
+    @Builder.Default
+    private List<String> screenshots = new ArrayList<>();
 
 
 }

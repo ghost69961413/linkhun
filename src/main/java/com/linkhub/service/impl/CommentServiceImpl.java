@@ -13,6 +13,7 @@ import com.linkhub.repository.PostRepository;
 import com.linkhub.repository.UserRepository;
 import com.linkhub.service.CommentService;
 import com.linkhub.service.NotificationService;
+import com.linkhub.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,7 @@ public class CommentServiceImpl implements CommentService {
     private final UserRepository userRepository;
     private final CommentMapper commentMapper;
     private final NotificationService notificationService;
+    private final PostService postService;
 
     private User getCurrentUser() {
 
@@ -50,6 +52,7 @@ public class CommentServiceImpl implements CommentService {
             CommentRequest request) {
 
         User user = getCurrentUser();
+        postService.assertCanView(postId);
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() ->
@@ -88,6 +91,7 @@ public class CommentServiceImpl implements CommentService {
             Long postId,
             Pageable pageable) {
 
+        postService.assertCanView(postId);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() ->
                         new BadRequestException("Post not found"));

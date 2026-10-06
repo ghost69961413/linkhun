@@ -3,6 +3,9 @@ package com.linkhub.controller;
 import com.linkhub.dto.UserDto.UserResponse;
 import com.linkhub.response.ApiResponse;
 import com.linkhub.service.UserService;
+import com.linkhub.dto.UserDto.ChangeEmailRequest;
+import com.linkhub.dto.auth.AuthResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +20,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+
+    @PutMapping("/change-email")
+    public ResponseEntity<AuthResponse> changeEmail(@Valid @RequestBody ChangeEmailRequest request) {
+        return ResponseEntity.ok(userService.changeEmail(request));
+    }
 
     // =====================================================
     // CURRENT USER

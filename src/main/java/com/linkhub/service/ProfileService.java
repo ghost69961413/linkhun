@@ -12,6 +12,10 @@ public interface ProfileService {
             MultipartFile image
     );
 
+    String updateProfileImage(MultipartFile image, boolean cover);
+
+    ProfileResponse getProfile(String userId);
+
     ProfileResponse getProfileByUsername(String username);
 
     ProfileResponse updateProfile(ProfileRequest request);

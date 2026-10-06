@@ -1,0 +1,2 @@
+@import "tailwindcss";
+@theme { --font-sans: "DM Sans", sans-serif; --font-display: "Manrope", sans-serif; --color-linkhub-violet: #a18aff; --color-linkhub-mint: #63d9a1; }

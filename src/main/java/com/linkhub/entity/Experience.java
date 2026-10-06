@@ -24,7 +24,6 @@ public class Experience extends BaseEntity {
     @Column(nullable = false)
     private String location;
 
-    @Column(nullable = false)
     private Integer startYear;
 
     private Integer endYear;

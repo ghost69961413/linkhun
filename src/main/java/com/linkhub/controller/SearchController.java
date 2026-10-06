@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
+import com.linkhub.enums.ProfileType;
 
 @RestController
 @RequestMapping("/api/search")
@@ -29,6 +30,7 @@ public class SearchController {
     @GetMapping("/users")
     public ApiResponse<Page<UserSearchResponse>> searchUsers(
             @RequestParam String query,
+            @RequestParam(required = false) ProfileType profileType,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
@@ -41,7 +43,7 @@ public class SearchController {
         return ApiResponse.<Page<UserSearchResponse>>builder()
                 .success(true)
                 .message("Users found successfully")
-                .data(searchService.searchUsers(query, pageable))
+                .data(searchService.searchUsers(query, profileType, pageable))
                 .build();
     }
     @GetMapping("/posts")

@@ -23,6 +23,12 @@ public class PostResponse {
 
     private Long viewCount;
 
+    private Long likeCount;
+
+    private Long commentCount;
+
+    private Boolean likedByMe;
+
     private Long userId;
 
     private String username;

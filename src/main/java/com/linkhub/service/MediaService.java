@@ -1,6 +1,7 @@
 package com.linkhub.service;
 
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.Resource;
 
 public interface MediaService {
 
@@ -13,4 +14,6 @@ public interface MediaService {
             MultipartFile file,
             String folder
     );
+
+    Resource load(String storedUrl);
 }

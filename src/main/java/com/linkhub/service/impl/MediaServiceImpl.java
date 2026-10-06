@@ -1,165 +1,88 @@
 package com.linkhub.service.impl;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 import com.linkhub.exception.BadRequestException;
 import com.linkhub.service.MediaService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class MediaServiceImpl implements MediaService {
+    private static final long MAX_IMAGE_SIZE = 5L * 1024 * 1024;
+    private static final long MAX_VIDEO_SIZE = 25L * 1024 * 1024;
 
-    private final Cloudinary cloudinary;
+    private static final Map<String, String> IMAGE_TYPES = Map.of(
+            "image/jpeg", ".jpg",
+            "image/png", ".png",
+            "image/gif", ".gif",
+            "image/webp", ".webp"
+    );
+    private static final Map<String, String> VIDEO_TYPES = Map.of(
+            "video/mp4", ".mp4",
+            "video/webm", ".webm",
+            "video/quicktime", ".mov"
+    );
 
-    private static final long MAX_IMAGE_SIZE =
-            5 * 1024 * 1024; // 5 MB
+    @Value("${linkhub.upload-dir:uploads}")
+    private String uploadDirectory;
 
-    private static final long MAX_VIDEO_SIZE =
-            50 * 1024 * 1024; // 50 MB
-
-
-    // =========================
-    // IMAGE UPLOAD
-    // =========================
-
-    @Override
-    public String uploadImage(
-            MultipartFile file,
-            String folder) {
-
-        validateImage(file);
-
-        try {
-
-            Map<?, ?> result =
-                    cloudinary.uploader().upload(
-                            file.getBytes(),
-                            ObjectUtils.asMap(
-                                    "resource_type", "image",
-                                    "folder", folder
-                            )
-                    );
-
-            return result
-                    .get("secure_url")
-                    .toString();
-
-        } catch (IOException e) {
-
-            throw new RuntimeException(
-                    "Image upload failed",
-                    e
-            );
-        }
-    }
-
-
-    // =========================
-    // VIDEO UPLOAD
-    // =========================
+    @Value("${linkhub.public-base-url:http://localhost:8080}")
+    private String publicBaseUrl;
 
     @Override
-    public String uploadVideo(
-            MultipartFile file,
-            String folder) {
+    public Resource load(String storedUrl) {
+        String marker = "/uploads/";
+        int markerIndex = storedUrl == null ? -1 : storedUrl.indexOf(marker);
+        if (markerIndex < 0) throw new BadRequestException("Media is not stored on this server");
+        String relative = storedUrl.substring(markerIndex + marker.length());
+        Path root = Path.of(uploadDirectory).toAbsolutePath().normalize();
+        Path file = root.resolve(relative).normalize();
+        if (!file.startsWith(root) || !Files.isRegularFile(file)) throw new BadRequestException("Media file was not found");
+        try {
+            return new UrlResource(file.toUri());
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not read uploaded media", e);
+        }
+    }
 
-        validateVideo(file);
+    @Override
+    public String uploadImage(MultipartFile file, String folder) {
+        return store(file, IMAGE_TYPES, MAX_IMAGE_SIZE, "Image", folder);
+    }
+
+    @Override
+    public String uploadVideo(MultipartFile file, String folder) {
+        return store(file, VIDEO_TYPES, MAX_VIDEO_SIZE, "Video", folder);
+    }
+
+    private String store(MultipartFile file, Map<String, String> allowedTypes, long maxBytes, String label, String folder) {
+        if (file == null || file.isEmpty()) throw new BadRequestException(label + " file is required");
+        if (file.getSize() > maxBytes) throw new BadRequestException(label + " must not exceed " + (maxBytes / (1024 * 1024)) + " MB");
+        String contentType = file.getContentType();
+        String extension = contentType == null ? null : allowedTypes.get(contentType.toLowerCase());
+        if (extension == null) throw new BadRequestException("Unsupported " + label.toLowerCase() + " format");
+
+        String safeFolder = folder == null ? "posts" : folder.replaceAll("[^a-zA-Z0-9_-]", "_");
+        String fileName = UUID.randomUUID() + extension;
+        Path directory = Path.of(uploadDirectory).toAbsolutePath().normalize().resolve(safeFolder).normalize();
+        Path destination = directory.resolve(fileName).normalize();
+        if (!destination.startsWith(directory)) throw new BadRequestException("Invalid upload destination");
 
         try {
-
-            Map<?, ?> result =
-                    cloudinary.uploader().upload(
-                            file.getBytes(),
-                            ObjectUtils.asMap(
-                                    "resource_type", "video",
-                                    "folder", folder
-                            )
-                    );
-
-            return result
-                    .get("secure_url")
-                    .toString();
-
+            Files.createDirectories(directory);
+            file.transferTo(destination);
         } catch (IOException e) {
-
-            throw new RuntimeException(
-                    "Video upload failed",
-                    e
-            );
-        }
-    }
-
-
-    // =========================
-    // IMAGE VALIDATION
-    // =========================
-
-    private void validateImage(
-            MultipartFile file) {
-
-        if (file == null || file.isEmpty()) {
-
-            throw new BadRequestException(
-                    "Image is required"
-            );
+            throw new IllegalStateException("Could not store uploaded media", e);
         }
 
-        if (file.getSize() > MAX_IMAGE_SIZE) {
-
-            throw new BadRequestException(
-                    "Image size must not exceed 5 MB"
-            );
-        }
-
-        String contentType =
-                file.getContentType();
-
-        if (contentType == null ||
-                !contentType.startsWith("image/")) {
-
-            throw new BadRequestException(
-                    "Only image files are allowed"
-            );
-        }
-    }
-
-
-    // =========================
-    // VIDEO VALIDATION
-    // =========================
-
-    private void validateVideo(
-            MultipartFile file) {
-
-        if (file == null || file.isEmpty()) {
-
-            throw new BadRequestException(
-                    "Video is required"
-            );
-        }
-
-        if (file.getSize() > MAX_VIDEO_SIZE) {
-
-            throw new BadRequestException(
-                    "Video size must not exceed 50 MB"
-            );
-        }
-
-        String contentType =
-                file.getContentType();
-
-        if (contentType == null ||
-                !contentType.startsWith("video/")) {
-
-            throw new BadRequestException(
-                    "Only video files are allowed"
-            );
-        }
+        return publicBaseUrl.replaceAll("/$", "") + "/uploads/" + safeFolder + "/" + fileName;
     }
 }

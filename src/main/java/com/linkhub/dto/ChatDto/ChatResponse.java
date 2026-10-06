@@ -21,4 +21,8 @@ public class ChatResponse {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    private MessageResponse lastMessage;
+
+    private Long unreadCount;
 }

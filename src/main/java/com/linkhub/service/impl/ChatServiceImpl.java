@@ -7,12 +7,14 @@ import com.linkhub.dto.ChatDto.MessageResponse;
 import com.linkhub.entity.Chat;
 import com.linkhub.entity.Message;
 import com.linkhub.entity.User;
+import com.linkhub.enums.ConnectionStatus;
 import com.linkhub.exception.BadRequestException;
 import com.linkhub.exception.UserNotFoundException;
 import com.linkhub.mapper.ChatMapper;
 import com.linkhub.repository.ChatRepository;
 import com.linkhub.repository.MessageRepository;
 import com.linkhub.repository.UserRepository;
+import com.linkhub.repository.ConnectionRequestRepository;
 import com.linkhub.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -33,6 +35,7 @@ public class ChatServiceImpl implements ChatService {
     private final ChatRepository chatRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final ConnectionRequestRepository connectionRequestRepository;
     private final ChatMapper chatMapper;
 
 
@@ -126,6 +129,10 @@ public class ChatServiceImpl implements ChatService {
             );
         }
 
+        if (!isConnected(currentUser, targetUser)) {
+            throw new BadRequestException("You can message members after they accept your connection request");
+        }
+
 
         // Check whether chat already exists
         List<Chat> currentUserChats =
@@ -151,7 +158,7 @@ public class ChatServiceImpl implements ChatService {
             if (hasTargetUser
                     && chat.getParticipants().size() == 2) {
 
-                return chatMapper.toChatResponse(chat);
+                return toChatResponse(chat, currentUser);
             }
         }
 
@@ -171,9 +178,7 @@ public class ChatServiceImpl implements ChatService {
         Chat savedChat =
                 chatRepository.save(chat);
 
-        return chatMapper.toChatResponse(
-                savedChat
-        );
+        return toChatResponse(savedChat, currentUser);
     }
 
 
@@ -192,7 +197,8 @@ public class ChatServiceImpl implements ChatService {
                         currentUser
                 )
                 .stream()
-                .map(chatMapper::toChatResponse)
+                .map(chat -> toChatResponse(chat, currentUser))
+                .sorted((left, right) -> chatActivity(right).compareTo(chatActivity(left)))
                 .toList();
     }
 
@@ -214,9 +220,7 @@ public class ChatServiceImpl implements ChatService {
                 currentUser
         );
 
-        return chatMapper.toChatResponse(
-                chat
-        );
+        return toChatResponse(chat, currentUser);
     }
 
 
@@ -260,6 +264,14 @@ public class ChatServiceImpl implements ChatService {
                 currentUser
         );
 
+        User recipient = chat.getParticipants().stream()
+                .filter(participant -> !participant.getId().equals(currentUser.getId()))
+                .findFirst()
+                .orElseThrow(() -> new BadRequestException("Conversation recipient was not found"));
+        if (!isConnected(currentUser, recipient)) {
+            throw new BadRequestException("This conversation is unavailable because you are no longer connected");
+        }
+
 
         Message message = Message.builder()
                 .chat(chat)
@@ -272,10 +284,31 @@ public class ChatServiceImpl implements ChatService {
         Message savedMessage =
                 messageRepository.save(message);
 
+        chat.setUpdatedAt(java.time.LocalDateTime.now());
+        chatRepository.save(chat);
+
 
         return chatMapper.toMessageResponse(
                 savedMessage
         );
+    }
+
+    private boolean isConnected(User first, User second) {
+        return connectionRequestRepository.existsBySenderAndRecipientAndStatus(first, second, ConnectionStatus.ACCEPTED)
+                || connectionRequestRepository.existsBySenderAndRecipientAndStatus(second, first, ConnectionStatus.ACCEPTED);
+    }
+
+    private ChatResponse toChatResponse(Chat chat, User currentUser) {
+        ChatResponse response = chatMapper.toChatResponse(chat);
+        response.setLastMessage(messageRepository.findTopByChatOrderByCreatedAtDesc(chat)
+                .map(chatMapper::toMessageResponse).orElse(null));
+        response.setUnreadCount(messageRepository.countByChatAndSenderNotAndReadFalse(chat, currentUser));
+        return response;
+    }
+
+    private java.time.LocalDateTime chatActivity(ChatResponse chat) {
+        if (chat.getLastMessage() != null && chat.getLastMessage().getCreatedAt() != null) return chat.getLastMessage().getCreatedAt();
+        return chat.getUpdatedAt() != null ? chat.getUpdatedAt() : chat.getCreatedAt();
     }
 
 

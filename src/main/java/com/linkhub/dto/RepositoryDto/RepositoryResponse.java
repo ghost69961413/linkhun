@@ -27,6 +27,14 @@ public class RepositoryResponse {
     private Long ownerId;
 
     private String ownerName;
+    private String ownerUsername;
+    private Boolean initializeReadme;
+    private String license;
+    private String gitignoreTemplate;
+    private String defaultBranch;
+    private Integer filesCount;
+    private Integer stars;
+    private Integer forks;
 
     private LocalDateTime createdAt;
 

@@ -12,6 +12,7 @@ import com.linkhub.repository.PostRepository;
 import com.linkhub.repository.UserRepository;
 import com.linkhub.service.LikeService;
 import com.linkhub.service.NotificationService;
+import com.linkhub.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +28,7 @@ public class LikeServiceImpl implements LikeService {
     private final UserRepository userRepository;
     private final LikeMapper likeMapper;
     private final NotificationService notificationService;
+    private final PostService postService;
 
     private User getCurrentUser() {
 
@@ -45,6 +47,7 @@ public class LikeServiceImpl implements LikeService {
     public LikeResponse likePost(Long postId) {
 
         User user = getCurrentUser();
+        postService.assertCanView(postId);
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() ->
@@ -91,6 +94,7 @@ public class LikeServiceImpl implements LikeService {
     public LikeResponse unlikePost(Long postId) {
 
         User user = getCurrentUser();
+        postService.assertCanView(postId);
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() ->

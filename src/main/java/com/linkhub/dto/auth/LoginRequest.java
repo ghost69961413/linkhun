@@ -1,6 +1,7 @@
 package com.linkhub.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.*;
 
 @Getter
@@ -10,8 +11,9 @@ import lombok.*;
 @Builder
 public class LoginRequest {
 
-    @NotBlank(message = "Email is required")
-    private String email;
+    @NotBlank(message = "Username or email is required")
+    @JsonAlias("email")
+    private String usernameOrEmail;
 
     @NotBlank(message = "Password is required")
     private String password;

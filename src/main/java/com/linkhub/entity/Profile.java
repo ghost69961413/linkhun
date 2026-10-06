@@ -1,6 +1,7 @@
 package com.linkhub.entity;
 
 import jakarta.persistence.*;
+import com.linkhub.enums.ProfileType;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -17,6 +18,14 @@ import java.util.Set;
 @Builder
 public class Profile extends BaseEntity {
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "profile_type", nullable = false, length = 24)
+    @Builder.Default
+    private ProfileType profileType = ProfileType.PROFESSIONAL;
+
+    @OneToOne(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private RoleProfileDetails roleDetails;
+
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "profile_skills",
@@ -28,6 +37,9 @@ public class Profile extends BaseEntity {
 
     @Column(name = "profile_picture_url")
     private String profilePictureUrl;
+
+    @Column(name = "cover_image_url", length = 1000)
+    private String coverImageUrl;
 
 
     @Column(length = 255)
@@ -81,4 +93,8 @@ public class Profile extends BaseEntity {
     )
     @Builder.Default
     private List<Project> projects = new ArrayList<>();
+
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Certification> certifications = new ArrayList<>();
 }

@@ -5,6 +5,7 @@ import com.linkhub.entity.User;
 import com.linkhub.enums.RepositoryVisibility;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RepositoryRepository
@@ -30,4 +31,11 @@ public interface RepositoryRepository
             RepositoryVisibility visibility,
             Pageable pageable
     );
+
+    Page<Repository> findByVisibilityAndNameContainingIgnoreCase(RepositoryVisibility visibility, String name, Pageable pageable);
+
+    List<Repository> findByOwnerIdOrderByUpdatedAtDesc(Long ownerId);
+    List<Repository> findByOwnerIdAndVisibilityOrderByUpdatedAtDesc(Long ownerId, RepositoryVisibility visibility);
+    java.util.Optional<Repository> findByOwnerUsernameIgnoreCaseAndNameIgnoreCase(String username, String name);
+    boolean existsByOwnerIdAndNameIgnoreCase(Long ownerId, String name);
 }

@@ -23,10 +23,11 @@ public class ProjectController {
     public ResponseEntity<ApiResponse<ProjectResponse>> createProject(
             @Valid @ModelAttribute ProjectRequest request,
             @RequestParam(value = "thumbnail", required = false)
-            MultipartFile thumbnail) {
+            MultipartFile thumbnail,
+            @RequestParam(value = "screenshots", required = false) List<MultipartFile> screenshots) {
 
         ProjectResponse response =
-                projectService.createProject(request, thumbnail);
+                projectService.createProject(request, thumbnail, screenshots);
 
         return ResponseEntity.ok(
                 ApiResponse.<ProjectResponse>builder()
@@ -50,6 +51,13 @@ public class ProjectController {
                         .data(response)
                         .build()
         );
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ApiResponse<List<ProjectResponse>>> getUserProjects(@PathVariable Long userId) {
+        List<ProjectResponse> response = projectService.getUserProjects(userId);
+        return ResponseEntity.ok(ApiResponse.<List<ProjectResponse>>builder().success(true)
+                .message("Visible projects fetched successfully").data(response).build());
     }
 
     @GetMapping("/{id}")

@@ -11,6 +11,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -92,6 +95,27 @@ public class PostController {
                         .data(response)
                         .build()
         );
+    }
+
+    @GetMapping("/user/{username}")
+    public ResponseEntity<ApiResponse<Page<PostResponse>>> getUserPosts(
+            @PathVariable String username,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<PostResponse> response = postService.getUserPosts(username, pageable);
+        return ResponseEntity.ok(ApiResponse.<Page<PostResponse>>builder()
+                .success(true)
+                .message("Visible profile posts fetched successfully")
+                .data(response)
+                .build());
+    }
+
+    @GetMapping("/{postId}/media/{kind}")
+    public ResponseEntity<Resource> getPostMedia(@PathVariable Long postId, @PathVariable String kind) {
+        Resource media = postService.getPostMedia(postId, kind);
+        MediaType contentType = MediaTypeFactory.getMediaType(media).orElse(MediaType.APPLICATION_OCTET_STREAM);
+        return ResponseEntity.ok().contentType(contentType).body(media);
     }
 
     @GetMapping("/{postId}")

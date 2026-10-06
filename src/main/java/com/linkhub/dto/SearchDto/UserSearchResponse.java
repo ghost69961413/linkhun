@@ -1,6 +1,7 @@
 package com.linkhub.dto.SearchDto;
 
 import lombok.*;
+import com.linkhub.enums.ProfileType;
 
 @Getter
 @Setter
@@ -20,4 +21,5 @@ public class UserSearchResponse {
     private String profilePicture;
 
     private String headline;
+    private ProfileType profileType;
 }

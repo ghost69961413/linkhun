@@ -24,6 +24,6 @@ public class Message extends BaseEntity {
     private String content;
 
     @Builder.Default
-    @Column(nullable = false)
+    @Column(name = "is_read", nullable = false)
     private Boolean read = false;
 }

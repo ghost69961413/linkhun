@@ -3,6 +3,7 @@ package com.linkhub.dto.auth;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import com.linkhub.enums.ProfileType;
 
 @Getter
 @Setter
@@ -26,5 +27,7 @@ public class RegisterRequest {
 
     @NotBlank(message = "Password is required")
     private String password;
+
+    private ProfileType profileType;
 
 }

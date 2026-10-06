@@ -14,7 +14,7 @@ public class LikeController {
 
     private final LikeService likeService;
 
-    @PostMapping("/{postId}/like")
+    @PostMapping({"/{postId}/likes", "/{postId}/like"})
     public ResponseEntity<ApiResponse<LikeResponse>> likePost(
             @PathVariable Long postId) {
 
@@ -30,7 +30,7 @@ public class LikeController {
         );
     }
 
-    @DeleteMapping("/{postId}/like")
+    @DeleteMapping({"/{postId}/likes", "/{postId}/like"})
     public ResponseEntity<ApiResponse<LikeResponse>> unlikePost(
             @PathVariable Long postId) {
 

@@ -22,26 +22,29 @@ public class ProfileController {
         return profileService.getMyProfile();
     }
 
-    @GetMapping("/{username}")
-    public ProfileResponse getProfile(@PathVariable String username) {
-        return profileService.getProfileByUsername(username);
+    @GetMapping("/{userId}")
+    public ProfileResponse getProfile(@PathVariable String userId) {
+        return profileService.getProfile(userId);
     }
 
-    @PutMapping
+    @PutMapping({"", "/me"})
     public ProfileResponse updateProfile(@RequestBody ProfileRequest request) {
         return profileService.updateProfile(request);
     }
     @PostMapping("/picture")
-    public ResponseEntity<ApiResponse<Void>> updateProfilePicture(
-            @RequestParam("image") MultipartFile image) {
+    public ResponseEntity<ApiResponse<String>> updateProfilePicture(
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+        MultipartFile selected = image != null ? image : file;
+        String url = profileService.updateProfileImage(selected, false);
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .success(true).message("Profile image updated successfully").data(url).build());
+    }
 
-        profileService.updateProfilePicture(image);
-
-        return ResponseEntity.ok(
-                ApiResponse.<Void>builder()
-                        .success(true)
-                        .message("Profile picture updated successfully")
-                        .build()
-        );
+    @PostMapping("/cover")
+    public ResponseEntity<ApiResponse<String>> updateCoverImage(@RequestParam("image") MultipartFile image) {
+        String url = profileService.updateProfileImage(image, true);
+        return ResponseEntity.ok(ApiResponse.<String>builder()
+                .success(true).message("Cover image updated successfully").data(url).build());
     }
 }

@@ -6,6 +6,13 @@ import com.linkhub.exception.UserNotFoundException;
 import com.linkhub.mapper.UserMapper;
 import com.linkhub.repository.UserRepository;
 import com.linkhub.service.UserService;
+import com.linkhub.dto.UserDto.ChangeEmailRequest;
+import com.linkhub.dto.auth.AuthResponse;
+import com.linkhub.exception.BadRequestException;
+import com.linkhub.exception.ResourceAlreadyExistsException;
+import com.linkhub.security.CustomUserDetails;
+import com.linkhub.security.JwtService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +27,8 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     // =====================================================
     // CURRENT USER
@@ -118,5 +127,29 @@ public class UserServiceImpl implements UserService {
                         pageable
                 )
                 .map(userMapper::toResponse);
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse changeEmail(ChangeEmailRequest request) {
+        User user = getCurrentUserEntity();
+        String newEmail = request.getNewEmail().trim().toLowerCase();
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+        if (newEmail.equalsIgnoreCase(user.getEmail())) {
+            throw new BadRequestException("New email must be different from your current email");
+        }
+        if (userRepository.existsByEmailIgnoreCase(newEmail)) {
+            throw new ResourceAlreadyExistsException("That email address is already in use");
+        }
+        user.setEmail(newEmail);
+        User saved = userRepository.save(user);
+        return AuthResponse.builder()
+                .token(jwtService.generateToken(new CustomUserDetails(saved)))
+                .message("Email address updated successfully")
+                .email(saved.getEmail())
+                .username(saved.getUsername())
+                .build();
     }
 }

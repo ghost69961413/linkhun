@@ -16,10 +16,12 @@ public class RepositoryRequest {
 
     private String description;
 
-    @NotBlank(message = "Repository URL is required")
     private String repositoryUrl;
 
     private String language;
 
     private RepositoryVisibility visibility;
+    private Boolean initializeReadme;
+    private String license;
+    private String gitignoreTemplate;
 }

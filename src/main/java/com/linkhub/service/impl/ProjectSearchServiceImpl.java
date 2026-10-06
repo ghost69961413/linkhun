@@ -21,12 +21,7 @@ public class ProjectSearchServiceImpl implements ProjectSearchService {
             String query,
             Pageable pageable) {
 
-        return projectRepository
-                .findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                        query,
-                        query,
-                        pageable
-                )
+        return projectRepository.searchPublicProjects(query, pageable)
                 .map(projectSearchMapper::toResponse);
     }
 }

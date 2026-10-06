@@ -26,6 +26,14 @@ public class RepositoryMapper {
                                 ? repository.getOwner().getFirstName()
                                 : null
                 )
+                .ownerUsername(repository.getOwner() != null ? repository.getOwner().getUsername() : null)
+                .initializeReadme(repository.getInitializeReadme())
+                .license(repository.getLicense())
+                .gitignoreTemplate(repository.getGitignoreTemplate())
+                .defaultBranch(repository.getDefaultBranch())
+                .filesCount(repository.getFilesCount() == null ? 0 : repository.getFilesCount())
+                .stars(repository.getStars())
+                .forks(repository.getForks())
                 .createdAt(repository.getCreatedAt())
                 .updatedAt(repository.getUpdatedAt())
                 .build();

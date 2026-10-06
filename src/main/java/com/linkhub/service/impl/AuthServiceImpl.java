@@ -6,6 +6,7 @@ import com.linkhub.dto.auth.RegisterRequest;
 import com.linkhub.entity.Profile;
 import com.linkhub.entity.User;
 import com.linkhub.enums.Role;
+import com.linkhub.enums.ProfileType;
 import com.linkhub.exception.ResourceAlreadyExistsException;
 import com.linkhub.repository.ProfileRepository;
 import com.linkhub.repository.UserRepository;
@@ -31,19 +32,19 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse register(RegisterRequest request) {
 
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmailIgnoreCase(request.getEmail().trim())) {
             throw new ResourceAlreadyExistsException("Email already exists");
         }
 
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsernameIgnoreCase(request.getUsername().trim())) {
             throw new ResourceAlreadyExistsException("Username already exists");
         }
 
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .username(request.getUsername())
-                .email(request.getEmail())
+                .username(request.getUsername().trim())
+                .email(request.getEmail().trim().toLowerCase())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
                 .accountVerified(true) // Development ke liye true
@@ -53,6 +54,7 @@ public class AuthServiceImpl implements AuthService {
 
         Profile profile = Profile.builder()
                 .user(savedUser)
+                .profileType(request.getProfileType() == null ? ProfileType.PROFESSIONAL : request.getProfileType())
                 .followers(0)
                 .following(0)
                 .build();
@@ -72,15 +74,19 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse login(LoginRequest request) {
 
+        String identifier = request.getUsernameOrEmail().trim();
+        User user = identifier.contains("@")
+                ? userRepository.findByEmailIgnoreCase(identifier)
+                    .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException("Invalid username/email or password"))
+                : userRepository.findByUsernameIgnoreCase(identifier)
+                    .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException("Invalid username/email or password"));
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
+                        user.getEmail(),
                         request.getPassword()
                 )
         );
-
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
 
         String token = jwtService.generateToken(new CustomUserDetails(user));
 

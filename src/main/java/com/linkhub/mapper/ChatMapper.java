@@ -28,7 +28,7 @@ public class ChatMapper {
                 )
                 .participantNames(
                         participants.stream()
-                                .map(User::getFirstName)
+                                .map(user -> (user.getFirstName() + " " + user.getLastName()).trim())
                                 .toList()
                 )
                 .createdAt(chat.getCreatedAt())
@@ -56,7 +56,7 @@ public class ChatMapper {
                 )
                 .senderName(
                         sender != null
-                                ? sender.getFirstName()
+                                ? (sender.getFirstName() + " " + sender.getLastName()).trim()
                                 : null
                 )
                 .content(message.getContent())

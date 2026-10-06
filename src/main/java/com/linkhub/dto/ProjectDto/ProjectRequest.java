@@ -18,6 +18,8 @@ public class ProjectRequest {
 
     private String githubUrl;
 
+    private Long linkhubRepositoryId;
+
     private String liveDemoUrl;
 
     private LocalDate startDate;
@@ -31,5 +33,7 @@ public class ProjectRequest {
     private Boolean featured;
 
     private Set<String> technologies;
+    private Set<String> features;
+    private Set<String> teamMembers;
 
 }

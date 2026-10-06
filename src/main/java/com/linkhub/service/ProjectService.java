@@ -10,10 +10,12 @@ public interface ProjectService {
 
     ProjectResponse createProject(
             ProjectRequest request,
-            MultipartFile thumbnail
+            MultipartFile thumbnail,
+            List<MultipartFile> screenshots
     );
 
     List<ProjectResponse> getMyProjects();
+    List<ProjectResponse> getUserProjects(Long userId);
 
     ProjectResponse getProject(Long id);
 
