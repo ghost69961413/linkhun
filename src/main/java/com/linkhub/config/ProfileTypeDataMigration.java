@@ -6,9 +6,11 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.annotation.Profile;
 
 /** Assigns a neutral profile type to profiles that predate role selection. */
 @Component
+@Profile("!test")
 @RequiredArgsConstructor
 public class ProfileTypeDataMigration implements ApplicationRunner {
     private static final String VERSION = "20261006_profile_type_default";

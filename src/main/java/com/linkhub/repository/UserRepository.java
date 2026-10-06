@@ -28,6 +28,13 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     boolean existsByUsernameIgnoreCase(String username);
 
+    Page<User> findByUsernameContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
+            String username,
+            String firstName,
+            String lastName,
+            Pageable pageable
+    );
+
     @EntityGraph(attributePaths = "profile")
     Page<User> findByProfileProfileType(ProfileType profileType, Pageable pageable);
 }
