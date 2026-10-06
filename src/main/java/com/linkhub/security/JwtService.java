@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.function.Function;
 
@@ -73,10 +74,31 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
+        return Keys.hmacShaKeyFor(secretKeyBytes(secretKey));
+    }
 
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+    /**
+     * Render and other secret stores may provide either a Base64-encoded key or
+     * an ordinary random string. Prefer Base64 only when it decodes to a valid
+     * HS256 key; otherwise use the configured secret bytes directly.
+     */
+    static byte[] secretKeyBytes(String configuredSecret) {
+        if (configuredSecret == null || configuredSecret.isBlank()) {
+            throw new IllegalStateException("jwt.secret must contain at least 32 bytes");
+        }
 
-        return Keys.hmacShaKeyFor(keyBytes);
+        try {
+            byte[] decoded = Decoders.BASE64.decode(configuredSecret);
+            if (decoded.length >= 32) return decoded;
+        } catch (io.jsonwebtoken.io.DecodingException ignored) {
+            // A raw secret is valid configuration too; validate its byte length below.
+        }
+
+        byte[] raw = configuredSecret.getBytes(StandardCharsets.UTF_8);
+        if (raw.length < 32) {
+            throw new IllegalStateException("jwt.secret must contain at least 32 bytes");
+        }
+        return raw;
     }
 
 }
