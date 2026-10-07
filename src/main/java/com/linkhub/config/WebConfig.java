@@ -16,6 +16,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${linkhub.cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:5175,http://127.0.0.1:5174,http://127.0.0.1:5175}")
     private String allowedOrigins;
 
+    @Value("${linkhub.cors.allowed-origin-patterns:}")
+    private String allowedOriginPatterns;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         String location = java.nio.file.Path.of(uploadDirectory).toAbsolutePath().normalize().toUri().toString();
@@ -26,7 +29,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
 
-        registry.addMapping("/**")
+        var cors = registry.addMapping("/**")
                 .allowedOrigins(Arrays.stream(allowedOrigins.split(","))
                         .map(String::trim)
                         .filter(origin -> !origin.isEmpty())
@@ -41,5 +44,13 @@ public class WebConfig implements WebMvcConfigurer {
                 )
                 .allowedHeaders("*")
                 .allowCredentials(true);
+
+        String[] patterns = Arrays.stream(allowedOriginPatterns.split(","))
+                .map(String::trim)
+                .filter(pattern -> !pattern.isEmpty())
+                .toArray(String[]::new);
+        if (patterns.length > 0) {
+            cors.allowedOriginPatterns(patterns);
+        }
     }
 }

@@ -15,6 +15,9 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
     }
     if (error.response?.status === 401) return 'Please log in again.';
     if (error.response?.status === 403) return 'You do not have permission to do that.';
+    if (error.response?.status === 429) return 'LinkHub is busy right now. Please wait a moment and try again.';
+    if (error.response?.status === 503) return 'The LinkHub API is starting or temporarily unavailable. Please try again shortly.';
+    if ([502, 504].includes(error.response?.status ?? 0)) return 'The LinkHub API is temporarily unavailable. Please try again shortly.';
     if (error.response?.status === 409) return typeof body?.message === 'string' ? body.message : 'That email or username is already registered.';
     if (error.response?.status && error.response.status >= 500) return 'Server error. Please try again.';
     if (typeof body?.message === 'string' && body.message.trim()) return body.message;

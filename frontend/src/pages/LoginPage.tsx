@@ -5,6 +5,7 @@ import { ArrowRight, Code2, LoaderCircle, LockKeyhole, Mail, Sparkles } from 'lu
 import { Button } from '../components/ui/Button';
 import { GitHubIcon } from '../components/GitHubIcon';
 import { useAuthStore } from '../features/auth/authStore';
+import { retryTransientRequest } from '../services/queryClient';
 import { useThemeStore } from '../features/theme/themeStore';
 import { authService } from '../services/authService';
 import { getApiErrorMessage } from '../utils/apiError';
@@ -26,6 +27,8 @@ export function LoginPage() {
 
   const login = useMutation({
     mutationFn: () => authService.login({ usernameOrEmail, password, rememberMe }),
+    retry: retryTransientRequest,
+    retryDelay: 2_000,
     onSuccess: (session) => {
       setSession(session);
       navigate(destination.startsWith('/') ? destination : '/home', { replace: true });

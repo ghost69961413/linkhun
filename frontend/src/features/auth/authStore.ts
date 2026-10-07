@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { AuthSession, AuthUser } from '../../types/auth';
+import { queryClient } from '../../services/queryClient';
 
 const TOKEN_KEY = 'linkhub.accessToken';
 const USER_KEY = 'linkhub.authUser';
@@ -55,6 +56,7 @@ function clearSavedSession() {
 export const useAuthStore = create<AuthState>((set) => ({
   ...readInitialState(),
   setSession: (session) => {
+    queryClient.clear();
     clearSavedSession();
     const storage = session.rememberMe ? localStorage : sessionStorage;
     storage.setItem(TOKEN_KEY, session.accessToken);
@@ -68,6 +70,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   enterDemo: () => {
     if (!import.meta.env.DEV) return;
+    queryClient.clear();
     clearSavedSession();
     localStorage.setItem(TOKEN_KEY, 'demo-session');
     localStorage.setItem(USER_KEY, JSON.stringify(demoUser));
@@ -75,6 +78,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user: demoUser, accessToken: 'demo-session', isDemo: true, rememberMe: true });
   },
   signOut: () => {
+    queryClient.clear();
     clearSavedSession();
     set({ user: null, accessToken: null, isDemo: false, rememberMe: true });
   },

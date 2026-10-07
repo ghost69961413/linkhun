@@ -3,14 +3,15 @@ import axios from 'axios';
 const api = axios.create({
   // Vite variables are compiled into the client; set VITE_API_URL in the
   // deployment environment to the public backend API root (including /api).
-  baseURL: import.meta.env.VITE_API_URL ?? import.meta.env.VITE_API_BASE_URL ?? '/api',
-  timeout: 20_000,
+  baseURL: import.meta.env.VITE_API_URL ?? '/api',
+  timeout: 60_000,
   headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
 });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('linkhub.accessToken') ?? sessionStorage.getItem('linkhub.accessToken');
-  if (token && token !== 'demo-session') config.headers.Authorization = `Bearer ${token}`;
+  const isAuthRequest = /^\/auth\/(login|register)(?:\/|$)/.test(config.url ?? '');
+  if (!isAuthRequest && token && token !== 'demo-session') config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
