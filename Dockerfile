@@ -13,7 +13,7 @@ RUN mkdir -p /app/uploads && chown -R linkhub:linkhub /app
 COPY --from=build /workspace/target/linkhub-0.0.1-SNAPSHOT.jar /app/linkhub.jar
 USER 10001
 ENV SPRING_PROFILES_ACTIVE=prod
-# Leave container headroom for direct buffers and multipart uploads on Render's 512 MiB free tier.
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=35.0 -XX:InitialRAMPercentage=5.0 -XX:+UseSerialGC"
+# Keep Spring Data's startup-time repository parsing within Render's 512 MiB free tier.
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=50.0 -XX:InitialRAMPercentage=8.0 -XX:+UseSerialGC"
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/linkhub.jar"]
