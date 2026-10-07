@@ -181,7 +181,10 @@ public class RepositoryServiceImpl implements RepositoryService {
     @Override public RepositoryFileResponse uploadFile(Long id, String branchName, String path, String content, boolean binary, String mimeType) {
         Repository repo = requireOwner(id); RepositoryBranch branch = branch(repo, branchName);
         RepositoryFile saved = saveFile(repo, branch, normalizePath(path), content, false, binary, mimeType, true);
-        commit(repo, branch, currentUser(), "Upload " + saved.getPath(), "Uploaded file " + saved.getPath()); return fileResponse(saved);
+        commit(repo, branch, currentUser(), "Upload " + saved.getPath(), "Uploaded file " + saved.getPath());
+        // The caller already has the file locally. Return only metadata here so a
+        // bulk upload does not serialize and transfer every file's full contents.
+        return fileResponse(saved, false);
     }
     @Override public RepositoryFileResponse updateFile(Long id, Long fileId, RepositoryFileRequest request) {
         Repository repo = requireOwner(id); RepositoryFile file = fileRepository.findByIdAndRepositoryId(fileId, id).orElseThrow(() -> new RepositoryNotFoundException("File not found"));
