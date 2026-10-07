@@ -26,6 +26,10 @@ export const authService = {
     const { data } = await api.post<AuthApiResponse>('/auth/login', {
       usernameOrEmail: input.usernameOrEmail.trim(),
       password: input.password,
+    }, {
+      // Render's free instance can take several minutes to cold-start. Keep
+      // the login request alive long enough for Spring Boot to finish starting.
+      timeout: 270_000,
     });
     return toSession(data, input.rememberMe);
   },

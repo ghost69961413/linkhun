@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, Code2, LoaderCircle, LockKeyhole, Mail, Sparkles } from 'lucide-react';
@@ -15,6 +15,7 @@ export function LoginPage() {
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+  const [showWakeMessage, setShowWakeMessage] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors<LoginField>>({});
   const setSession = useAuthStore((state) => state.setSession);
   const enterDemo = useAuthStore((state) => state.enterDemo);
@@ -27,13 +28,27 @@ export function LoginPage() {
 
   const login = useMutation({
     mutationFn: () => authService.login({ usernameOrEmail, password, rememberMe }),
-    retry: retryTransientRequest,
+    retry: (failureCount, error) => {
+      // A timeout already waited through the full free-tier cold-start window;
+      // retrying it would make the user wait another 4.5 minutes.
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'ECONNABORTED') return false;
+      return retryTransientRequest(failureCount, error);
+    },
     retryDelay: 2_000,
     onSuccess: (session) => {
       setSession(session);
       navigate(destination.startsWith('/') ? destination : '/home', { replace: true });
     },
   });
+
+  useEffect(() => {
+    if (!login.isPending) {
+      setShowWakeMessage(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setShowWakeMessage(true), 8_000);
+    return () => window.clearTimeout(timer);
+  }, [login.isPending]);
 
   if (isAuthenticated) return <Navigate to="/home" replace />;
 
@@ -90,6 +105,7 @@ export function LoginPage() {
               <label className="remember"><input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} /> Remember me</label>
             </div>
             {login.isError && <div className="form-error" role="alert">{getApiErrorMessage(login.error, 'We couldn’t sign you in. Please try again.')}</div>}
+            {login.isPending && showWakeMessage && <p role="status" style={{ margin: 0, color: 'var(--app-muted)', fontSize: 11 }}>The API is waking up. Keep this page open; the first sign-in can take a few minutes.</p>}
             <Button type="submit" variant="primary" className="auth-submit" disabled={login.isPending} aria-live="polite">
               {login.isPending && <LoaderCircle className="spin" size={16} aria-hidden="true" />}
               {login.isPending ? 'Signing in…' : 'Sign in'} <ArrowRight size={15} />
